@@ -19,6 +19,21 @@ var axiom = [
 	new_vertex(-20.0, 0.0),
 	new_vertex(-30.0, 10.0),
 ]
+# Got this routine from forum:
+# https://godotengine.org/qa/24522/detect-if-a-2d-line-is-inside-another-2d-line
+func are_lines_intersecting(a, b, c, d):
+	var cd = d - c
+	var ab = b - a
+	var div = cd.y * ab.x - cd.x * ab.y
+	if abs(div) > 0.001:
+		var ac = a - c
+		var ua = ((cd.x * ac.y) - (cd.y * ac.x)) / div
+		if not ua >= 0.0 or not ua <= 1.0:
+			return false
+		var ub = ((ab.x * ac.y) - (ab.y * ac.x)) / div
+		if ub >= 0.0 and ub <= 1.0:
+			return true
+	return false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -34,7 +49,7 @@ var vertex_queue = []
 
 func check_suggestion(s, n, front):
 	var newfront = front.duplicate()
-	if abs(s.pos.x) > 100 || abs(s.pos.y) > 100:
+	if abs(s.pos.x) > 240 || abs(s.pos.y) > 240:
 		return newfront
 	if s.pos.distance_to(n.pos) < min_distance:
 		return newfront
@@ -50,6 +65,11 @@ func check_suggestion(s, n, front):
 			if ! n in k.neighbors:
 				k.neighbors.append(n)
 			return newfront
+		for kn in k.neighbors:
+			if n.pos == k.pos || n == k || n == kn || n.pos == kn.pos:
+				continue
+			if are_lines_intersecting(s.pos, n.pos, k.pos, kn.pos):
+				return newfront
 	if ! s in n.neighbors:
 		n.neighbors.append(s)
 	if ! n in s.neighbors:
@@ -61,7 +81,7 @@ func check_suggestion(s, n, front):
 # simple density map
 # better use image as data source
 func get_density(pos):
-	if pos.length() > 100:
+	if pos.length() > 280:
 		return 0.0
 	else:
 		return 0.7
